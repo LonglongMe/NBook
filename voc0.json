@@ -1,0 +1,349 @@
+[
+    {
+        "name": "get",
+        "index": 0,
+        "date": 20230310,
+        "collocation": [
+            "get on with",
+            "get next to"
+        ],
+        "meaning": [
+            [
+                "\u4e0e\u67d0\u4eba\u8f83\u597d"
+            ],
+            [
+                "\u63a5\u8fd1\u67d0\u4eba",
+                "\u8c04\u5a9a"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "have you get on with your classmates?"
+                ]
+            ],
+            [
+                [
+                    "how dare you get next to my friend?"
+                ],
+                [
+                    "have you get next to the boss?",
+                    "get next to your fucking study!"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "proposal",
+        "index": 1,
+        "collocation": [
+            "proposal"
+        ],
+        "meaning": [
+            [
+                "\u6c42\u5a5a"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "she snubbed his (proposal)"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "brace",
+        "index": 2,
+        "collocation": [
+            "brace up"
+        ],
+        "meaning": [
+            [
+                "\u4e0b\u5b9a\u51b3\u5fc3"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "(brace up)! put yourself together"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "hatch",
+        "index": 3,
+        "collocation": [
+            "hatch out"
+        ],
+        "meaning": [
+            [
+                "\u5f97\u51fa\u7ed3\u679c"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "lets see how will the plan (hatch out)"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "tan",
+        "index": 4,
+        "collocation": [
+            "tan someone's hide"
+        ],
+        "meaning": [
+            [
+                "\u60e9\u7f5a"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "I'll (tan his hide) if I catch him"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "intrigue",
+        "index": 5,
+        "collocation": [
+            "intrigue against"
+        ],
+        "meaning": [
+            [
+                "\u5bc6\u8c0b"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "he had (intrigued) with his brother (against)the king"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "line",
+        "index": 6,
+        "collocation": [
+            "on the line"
+        ],
+        "meaning": [
+            [
+                "\u4f7f\u5904\u4e8e\u5371\u9669\u4e2d"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "he won't put his career (on the line)"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "illustrate",
+        "index": 7,
+        "collocation": [
+            "be illustrated by"
+        ],
+        "meaning": [
+            [
+                "\u88ab\u9a8c\u8bc1"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "this can (be illustrated by) comparing the difference"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "bang",
+        "index": 8,
+        "collocation": [
+            "bang into"
+        ],
+        "meaning": [
+            [
+                "\u610f\u5916\u9047\u89c1"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "I didn't expect to (bang into) him there"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "window",
+        "index": 9,
+        "collocation": [
+            "out of the window"
+        ],
+        "meaning": [
+            [
+                "\u6d88\u5931"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "when they arrived, order went (out of the window)"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "conduct",
+        "index": 10,
+        "collocation": [
+            "code of conduct"
+        ],
+        "meaning": [
+            [
+                "\u884c\u4e3a\u51c6\u5219"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "New (code of conduct) lays down the ground rules"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "clutch",
+        "index": 11,
+        "collocation": [
+            "in the clutch"
+        ],
+        "meaning": [
+            [
+                "\u5728\u5173\u952e\u65f6\u523b"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "he is dependable (in the clutch)"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "term",
+        "index": 12,
+        "collocation": [
+            "on terms",
+            "come to terms"
+        ],
+        "meaning": [
+            [
+                "\u5173\u7cfb\u826f\u597d"
+            ],
+            [
+                "\u59a5\u534f\u3001\u5fcd\u53d7"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "It's hard to keep (on terms) with such a man"
+                ],
+                []
+            ],
+            [
+                [
+                    "He can (come to terms) with being poor"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "thick",
+        "index": 13,
+        "collocation": [
+            "in the thick of"
+        ],
+        "meaning": [
+            [
+                "\u5728\u6fc0\u70c8\u65f6\u523b",
+                "\u5168\u8eab\u5fc3\u6295\u5165"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "We are (in the thick of) the battle"
+                ],
+                [
+                    "I enjoy being (in the thick of) things"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "force",
+        "index": 14,
+        "collocation": [
+            "in force"
+        ],
+        "meaning": [
+            [
+                "\u5927\u89c4\u6a21\u5730",
+                "\u6709\u6548\u5730"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "police are out (in force) to prevent violence"
+                ],
+                [
+                    "the new tax is already (in force)"
+                ],
+                []
+            ]
+        ],
+        "proficiency": 0
+    }
+]
