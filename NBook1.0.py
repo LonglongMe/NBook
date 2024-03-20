@@ -51,9 +51,37 @@ class Gifbutton(ttk.Button):
         print("enternotbook!")
 
 class Giflabel(ttk.Label):
-    def __init__(self,master,index):
-        super().__init__(master)   
-
+    def __init__(self,master,type,command):
+        super().__init__(master)
+        self.frameindex=0
+        self.type=type
+        self.openorclose=-1
+        self.speed=20
+        self.pathlist=['assets/hints/config.png','assets/hints/left.png','assets/hints/right.png','assets/hints/delete.png']   
+        self.images=[ImageTk.PhotoImage(Image.open(self.pathlist[type]).resize((50+i*2,50+i*2), Image.BICUBIC)) for i in range(5)]
+        self.bind("<Button-1>",command)
+        self.config(image=self.images[self.frameindex])
+        self.bind("<Enter>", self.triggerplay) 
+        self.bind("<Leave>", self.triggerplay)
+        self.config(padding=10)
+    def triggerplay(self,event):
+        self.openorclose*=-1
+        def play():
+            end=0
+            if self.openorclose==1:
+                if self.frameindex<4:
+                    self.frameindex+=1
+            else:
+                if self.frameindex==0:
+                    end=1
+                else:
+                    self.frameindex-=1
+            self.config(image=self.images[self.frameindex],padding=10-self.frameindex)
+            
+            if end!=1:
+                self.master.after(self.speed,play)       
+        play()
+   
 class Word:
     def __init__(self,index,name='',len=0):
         self.name=name
@@ -71,7 +99,7 @@ class Word:
             if targetlist[1]>len(self.collocation)-1:
                 self.collocation.append(update)
                 self.meaning.append([])
-                self.egsentence.append([[]])
+                self.egsentence.append([])
             else:
                 self.collocation[targetlist[1]]=update
         elif type==2:#compile meaning
@@ -98,7 +126,7 @@ class Vocbook:
         self.stagedpageinex=[]
         self.stagedword=[]
         self.lastwordindex=lastwordindex
-        self.pageline=26
+        self.pageline=22
 
     def PAdjust(self,ind=0):
         pageline=20
@@ -160,35 +188,40 @@ class Manager:
         self.newpagelist=[[]]#today's newword pages
         self.newpageindex=0#index to display today's new word
         self.newword=None#class word
-        self.conpageline=22#config page's line number
+        self.conpageline=18#config page's line number
         self.cxy=[0,0]#coordinate for config block
         self.state=0#0=reader 1=configer
         self.pagelinestr=[]#page line strings
         self.pagelabellist=[]#labels ready to be given pagelinestrs
         self.nwlabel=[[],[],[]]#newword's configure block entry and labels
+        self.owlabel=None
+        self.oldword=None
         self.nwlefthintlist=[]#newword's hint 
-        self.width=44
-        s = ttk.Style()
-        s.configure('Treeview', rowheight=45)
+        self.width=42
+        self.width2=17
+        #s = ttk.Style()
+        #s.configure('Treeview', rowheight=45)
+
     def SetupMenu(self):
         self.readmenu()
         self.window.col1 = ttk.Frame(self.window, padding=50)
         self.window.col1.grid(row=0, column=0)
+        #self.window.lp=ttk.Frame(self.window)
         for i in range(self.booknumber):
             a=Gifbutton(self.window.col1,i)
             a.bind('<Button-1>',self.enternotbook)
             a.grid(row=i, column=1, padx=(45,40), pady=10, sticky="nsew")
             self.btnlist.append(a)
-        self.window.lab= ttk.Label(
+        note= ttk.Label(
             master=self.window.col1,
-            text="Welcome to NBook\nExert your time",
+            text="Welcome to NBook\nIf you risk nothing\nyou risk even more",
             justify="center",
             font=tkFont.Font(family="Ink Free", size=13)
         )
-        self.window.lab.grid(row=4, column=1, pady=10, columnspan=2)
+        note.grid(row=4, column=1, pady=10, columnspan=2)
         # Separator
-        self.window.separator = ttk.Separator(self.window.col1)
-        self.window.separator.grid(row=3, column=1,padx=(45,40), pady=20, sticky="ew")
+        sep = ttk.Separator(self.window.col1)
+        sep.grid(row=3, column=1,padx=(45,40), pady=20, sticky="ew")
 
     def readmenu(self):
         with open('menu.json',mode='r',encoding='utf-8') as f:
@@ -209,51 +242,62 @@ class Manager:
         self.readnotebook()
         self.CNBpage=self.CNB.currentpage
         self.CNBline=self.CNB.pageline
-        self.window.destroy()
-        self.window=ttk.Frame(self.master)
-        #self.window.grid(row=0,column=0)
-        self.window.pack(fill="both", expand=True)
+
+        thread = threading.Thread(target=self.setuppage(), args=())
+        thread.start()
+        thread.join()
+        #self.master.mainloop()
+        
+        
+        #thread = threading.Thread(target=self.displaylabels, args=(self.CNBline,))
+        #thread.start()
+        self.window.col1.grid_remove()
         self.window.menubox=ttk.Frame(self.window)
         self.window.menubox.grid(row=0,column=0)
-        triggerconfig=ttk.Button(self.window.menubox,text='Config',command=self.triggerconfig)
-        triggerconfig.grid(row=0,column=0,padx=(5,15))
-        leftbutton=ttk.Button(self.window.menubox,text='←',width=3,command=self.left)
-        leftbutton.grid(row=0,column=1,padx=(15,5))
-        rightbutton=ttk.Button(self.window.menubox,text='→',width=3,command=self.right)
-        rightbutton.grid(row=0,column=2,padx=(5,15))
-        self.setuppage()
+        triggerconfig=Giflabel(self.window.menubox,0,self.triggerconfig)
+        triggerconfig.grid(row=0,column=0,padx=20)
+        leftbutton=Giflabel(self.window.menubox,1,self.left)
+        leftbutton.grid(row=0,column=1,padx=20)
+        rightbutton=Giflabel(self.window.menubox,2,self.right)
+        rightbutton.grid(row=0,column=2,padx=20)
+        self.displaylabels(self.CNBline)
 
-    def setuppage(self,event=None):#start setuppage 
+    def setuppage(self,event=None,word=None,wordpostion=None):#start setuppage 
         if self.state==0:
             self.window.lp = ttk.LabelFrame(self.window, text=f"Page:{self.CNBpage}", padding=(5,25))
             self.window.lp.grid(row=1, column=0,padx=(10, 10), pady=(10, 10))
             self.decodeintostr(self.CNB.pagedatalist,self.CNBpage,self.CNBline)
             self.initlabels(self.CNBline,self.window.lp)
-            self.displaystrs(self.pagelinestr)
+            self.configlabels(self.pagelinestr)
+            self.displaylabels(self.CNBline)
         if self.state==1:
+            self.window.menubox.grid_remove()
+            self.window.lp.grid_remove()
             self.window.lp = ttk.LabelFrame(self.window, text="New Words", padding=(5,25))
             self.window.lp.grid(row=1, column=0,padx=(10, 10), pady=(10, 10))
-            self.initlabels(self.conpageline,self.window.lp)
             self.configblock()
-
-    def initlabels(self,pagelength,master):
+            self.initlabels(self.conpageline,self.window.lp)
+            self.decodeintostr(self.newpagelist,0,self.conpageline)
+            self.configlabels(self.pagelinestr)
+            self.displaylabels(self.conpageline)
+        if self.state==2:
+            self.window.menubox.grid_remove()
+            self.configblock(word,wordpostion)
+            
+    def initlabels(self,pagelength,master):#list of ttklabel
         self.pagelabellist=[]
         for i in range(pagelength):
-            a=ttk.Label(master,text="",width=15,font=self.cfont,justify='center')
-            a.grid(row=i*2,column=0,padx=1,pady=1,columnspan=1)
-                #a.bind('<Button-1>',self.triggerconfig)
-            b=ttk.Label(master,text="",font=self.efont,width=self.width)
-            b.grid(row=i*2,column=1,padx=1,pady=1,columnspan=1,sticky="nsew")  
+            a=ttk.Label(master,text="",width=self.width2,font=self.cfont,justify='center')
+            b=ttk.Label(master,text="",font=self.efont,width=self.width) 
             c=ttk.Separator(master)
-            c.grid(row=i*2+1,column=1,padx=1,pady=0,sticky="nsew")
             d=ttk.Separator(master)
-            d.grid(row=i*2+1, column=0, padx=1, pady=0, sticky="ew")  
-            self.pagelabellist.append([a,b]) 
+            self.pagelabellist.append([a,b,c,d]) 
 
-    def decodeintostr(self,pagedatalist,currentpage,pagelength):
+    def decodeintostr(self,pagedatalist,currentpage,pagelength):#list of strings
         current=pagedatalist[currentpage]
         pagelinestr=[]
         for word4list in current:
+            print(len(self.CNBdata),word4list[0])
             word=self.CNBdata[word4list[0]]
             wordlinedata=[[0,0,1]]
             for collocation in range(len(word['collocation'])):
@@ -266,11 +310,13 @@ class Manager:
         while len(pagelinestr)<pagelength:
             pagelinestr.append([0,0,0])
         self.pagelinestr=pagelinestr
+        print(self.pagelinestr)
 
-    def displaystrs(self,pagelinestr):#done setuppage
+    def configlabels(self,pagelinestr):#config label.text
         i=-1
         for x in pagelinestr:
             i+=1
+            print(x)
             if x[2]==1:
                 self.pagelabellist[i][0].config(text="◉"+x[0])
                 self.pagelabellist[i][1].config(text=x[1])
@@ -281,57 +327,80 @@ class Manager:
                     self.pagelabellist[i][1].config(text=x[1])
                 else:
                     if x[1]!=0:
-                        self.pagelabellist[i][1].config(text=x[1]) 
+                        self.pagelabellist[i][1].config(text=x[1])
+                    else:
+                        self.pagelabellist[i][1].config(text="")
+                        self.pagelabellist[i][0].config(text="")
+
+    def displaylabels(self,pagelength):#grid labels
+        for i in range(pagelength-1):
+            self.pagelabellist[i][0].grid(row=i*2,column=0,padx=1,pady=1,columnspan=1)
+            self.pagelabellist[i][1].grid(row=i*2,column=1,padx=1,pady=1,columnspan=1)
+            self.pagelabellist[i][2].grid(row=i*2+1,column=0,padx=1,pady=0,sticky="nsew")
+            self.pagelabellist[i][3].grid(row=i*2+1,column=1,padx=1,pady=0,sticky="nsew")
 
     def triggerconfig(self,event=None):#start configpage
         self.state=1
-        self.window.lp.grid_remove()
         self.setuppage(event)
 
-    def configblock(self):
-        self.newword=Word(self.CNB.lastwordindex)
+    def triggerfix(self,event):#state3 fix exist word
+        self.state=2
+        for x in self.pagelabellist:
+            if event.widget==x[0]:
+                word=self.CNBword[self.pagelabellist.index[x]]
+                wordposition=[self.CNBpage,self.pagelabellist.index[x]]
+        self.setuppage(word=word,wordpostion=wordposition)
+
+    def configblock(self,word:Word=None,wordposition=None):
         self.window.con = ttk.LabelFrame(self.window, text="AddWord", padding=0)
         self.window.con.grid(row=0, column=0 )
-        lab1=ttk.Label(self.window.con,text='N:')
-        lab1.grid(row=0, column=0, padx=(3, 3), pady=(5, 5), sticky="nsew")
-        self.nwlefthintlist.append(lab1)
-        en1=ttk.Entry(self.window.con,width=10)
-        en1.grid(row=0,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
-        en1.bind("<KeyPress>", self.movefocus)
-        en1.bind("<Button-1>",self.adjustcxy)
-        self.nwlabel[0]=[en1,0,0,0]
-
-        lab2=ttk.Label(self.window.con,text='C:')
-        lab2.grid(row=1, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
-        self.nwlefthintlist.append(lab2)
-        en2=ttk.Entry(self.window.con,width=15)
-        en2.grid(row=1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
-        en2.bind("<KeyPress>", self.movefocus)
-        en2.bind("<Button-1>",self.adjustcxy)
-        b=ttk.Label(self.window.con,width=self.width,text="-------------------------------------------------------------------------------------------")
-        b.grid(row=1,column=2,padx=(0, 4), pady=(5, 5), sticky="nsew")
-        self.nwlefthintlist.append(b)
-        self.nwlabel[1]=[en2,b,[1,0,0,0],0]
-        lab3=ttk.Label(self.window.con,text='M:')
-        lab3.grid(row=2, column=0, padx=(3, 3), pady=(5, 5), sticky="nsew")
-        self.nwlefthintlist.append(lab3)
-        en3=ttk.Entry(self.window.con,width=10,font=self.cfont)
-        en3.grid(row=2,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
-        en3.bind("<KeyPress>", self.movefocus)
-        en3.bind("<Button-1>",self.adjustcxy)
-
-        en4=ttk.Entry(self.window.con,width=self.width,font=self.efont)
-        en4.grid(row=2,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
-        en4.bind("<KeyPress>", self.movefocus)
-        en4.bind("<Button-1>",self.adjustcxy)
-        self.nwlabel[2]=[en3,en4,[2,0,0,0],[3,0,0,0]]
-
         alterpagebutton=ttk.Frame(self.window.con)
         alterpagebutton.grid(row=0,column=2)
-        leftbutton=ttk.Button(alterpagebutton,text="←",width=2,command=self.left)
-        leftbutton.grid(row=0,column=0,padx=(30,5))
-        rightbutton=ttk.Button(alterpagebutton,text="→",width=2,command=self.right)
-        rightbutton.grid(row=0,column=1,padx=(5,10))
+        leftbutton=Giflabel(alterpagebutton,1,self.left)
+        leftbutton.grid(row=0,column=1,padx=20)
+        rightbutton=Giflabel(alterpagebutton,2,self.right)
+        rightbutton.grid(row=0,column=2,padx=20)
+
+        if self.state==1:
+            self.newword=Word(self.CNB.lastwordindex)
+
+            lab1=ttk.Label(self.window.con,text='N:')
+            lab1.grid(row=0, column=0, padx=(3, 3), pady=(5, 5), sticky="nsew")
+            self.nwlefthintlist.append(lab1)
+            en1=ttk.Entry(self.window.con,width=10)
+            en1.grid(row=0,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
+            en1.bind("<KeyPress>", self.movefocus)
+            en1.bind("<Button-1>",self.adjustcxy)
+            self.nwlabel[0]=[en1,0,0,0]
+            
+            lab2=ttk.Label(self.window.con,text='C:')
+            lab2.grid(row=1, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
+            self.nwlefthintlist.append(lab2)
+            en2=ttk.Entry(self.window.con,width=15)
+            en2.grid(row=1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
+            en2.bind("<KeyPress>", self.movefocus)
+            en2.bind("<Button-1>",self.adjustcxy)
+            b=ttk.Label(self.window.con,width=self.width,text="|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+            b.grid(row=1,column=2,padx=(0, 4), pady=(5, 5), sticky="nsew")
+            self.nwlefthintlist.append(b)
+            self.nwlabel[1]=[en2,b,[1,0,0,0],0]
+            lab3=ttk.Label(self.window.con,text='M:')
+            lab3.grid(row=2, column=0, padx=(3, 3), pady=(5, 5), sticky="nsew")
+            self.nwlefthintlist.append(lab3)
+            en3=ttk.Entry(self.window.con,width=10,font=self.cfont)
+            en3.grid(row=2,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
+            en3.bind("<KeyPress>", self.movefocus)
+            en3.bind("<Button-1>",self.adjustcxy)
+
+            en4=ttk.Entry(self.window.con,width=self.width,font=self.efont)
+            en4.grid(row=2,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
+            en4.bind("<KeyPress>", self.movefocus)
+            en4.bind("<Button-1>",self.adjustcxy)
+            self.nwlabel[2]=[en3,en4,[2,0,0,0],[3,0,0,0]]
+
+        elif self.state==2:
+            pass
+            #for i in range(len(word.meaning))
 
     def adjustcxy(self,event):
         for i in range(len(self.nwlabel)):
@@ -342,6 +411,30 @@ class Manager:
         print(self.cxy)
 
     def movefocus(self,event):
+        def turnnewword():
+            if self.oldword.name!="":
+                length=0
+                newwordstrline=[]
+                for lines in self.owlabel:
+                    if lines[3]!=0 :
+                        if self.owlabel.index(lines)==2:
+                            newwordstrline.append([lines[0].get(),lines[1].get(),1])
+                        else:
+                            if lines[0]==0:
+                                newwordstrline.append(["",lines[1].get(),0])
+                            else:
+                                newwordstrline.append([lines[0].get(),lines[1].get(),0])
+                        length+=1
+                self.CNB.pagedatalist[-1].append([self.oldword.index,0,length-1,length])
+                self.CNBdata.append({"name":self.oldword.name,"index":self.oldword.index,"collocation":self.oldword.collocation,"meaning":self.oldword.meaning,"egsentence":self.oldword.egsentence,"proficiency":0})
+                self.newpagelist[-1]+=newwordstrline
+                print(self.newpagelist)
+            if m=='esc':
+                self.escape()
+            else:
+                self.manageconfigpage()
+                self.nwlabel[self.cxy[0]][self.cxy[1]].focus_set()
+
         m=None
         dlr=event.keysym
         if dlr=='Escape':
@@ -469,60 +562,52 @@ class Manager:
 
             if m=='esc' or m=='nw':
                 if self.newword.name!="" and self.nwlabel[2]!=[]:
-                    length=0
-                    newwordstrline=[]
-                    self.cxy=[0,0]
-                    for lines in self.nwlabel:
-                        if lines[3]!=0 :
-                            if self.nwlabel.index(lines)==2:
-                                newwordstrline.append([lines[0].get(),lines[1].get(),1])
-                            else:
-                                if lines[0]==0:
-                                    newwordstrline.append(["",lines[1].get(),0])
-                                else:
-                                    newwordstrline.append([lines[0].get(),lines[1].get(),0])
-                            length+=1
-                    self.CNB.pagedatalist[-1].append([self.newword.index,0,length-1,length])
                     self.CNB.lastwordindex+=1
-                    self.CNBdata.append({"name":self.newword.name,"index":self.newword.index,"collocation":self.newword.collocation,"meaning":self.newword.meaning,"egsentence":self.newword.egsentence,"proficiency":0})
+                self.oldword=self.newword
                 self.newword=None
-                if m=='esc':
-                    self.escape()
-                else:
-                    self.newpagelist[-1]+=newwordstrline
-                    self.manageconfigpage()
+                self.owlabel=self.nwlabel
+                self.nwlabel=[[],[],[]]
+                self.cxy=[0,0]
+                self.window.con.grid_remove()
+                if m=='nw':
+                    self.configblock()
+                    thread = threading.Thread(target=turnnewword, args=())
+                    thread.start()
+                elif m=="esc":
+                    turnnewword()
 
             print(self.cxy)
-            print(self.nwlabel)
-            self.nwlabel[self.cxy[0]][self.cxy[1]].focus_set()
-
-    def renewpage(self):
-        pass
+            if m!='esc' or m!='nw':
+                self.nwlabel[self.cxy[0]][self.cxy[1]].focus_set()
 
     def remove(self,event):
         pass
 
-    def left(self):
+    def left(self,event=None):
         if self.state==1:
             if self.newpageindex!=0:
                 self.newpageindex-=1
-                self.displaystrs(self.newpagelist[self.newpageindex])
+                self.configlabels(self.newpagelist[self.newpageindex])
+                self.displaylabels(self.conpageline)
         else:
             if self.CNBpage!=0:
                 self.CNBpage-=1
                 self.decodeintostr(self.CNB.pagedatalist,self.CNBpage,self.CNBline)
-                self.displaystrs(self.pagelinestr[self.CNBpage])
+                self.decodeintostr(self.CNB.pagedatalist,self.CNBpage,self.CNBline)
+                self.configlabels(self.pagelinestr)
 
-    def right(self):
+    def right(self,event=None):
         if self.state==1:
             if self.newpageindex!=len(self.newpagelist)-1:
                 self.newpageindex+=1
-                self.displaystrs(self.newpagelist[self.newpageindex])
+                self.configlabels(self.newpagelist[self.newpageindex])
+                self.displaylabels(self.conpageline)
         else:
             if self.CNBpage!=len(self.CNB.pagedatalist)-1:
                 self.CNBpage+=1
                 self.decodeintostr(self.CNB.pagedatalist,self.CNBpage,self.CNBline)
-                self.displaystrs(self.pagelinestr[self.CNBpage])
+                self.configlabels(self.pagelinestr)
+                #self.displaylabels(self.conpageline)
 
     def manageconfigpage(self):
         self.newpagelist[-1]=[x for x in self.newpagelist[-1]  if x!=[0,0,0] ]
@@ -531,10 +616,10 @@ class Manager:
             self.newpagelist[-2]=self.newpagelist[-2][:self.conpageline]
         while len(self.newpagelist[-1])<self.conpageline:
             self.newpagelist[-1].append([0,0,0])
-        self.window.con.grid_remove()
-        self.configblock()
-        print(self.newpagelist[self.newpageindex])
-        self.displaystrs(self.newpagelist[self.newpageindex])
+        print(self.newpagelist[self.newpageindex],"from manageconfigpage turning to newword")
+        #self.decodeintostr(self.CNB.pagedatalist,self.CNBpage,self.CNBline)
+        self.configlabels(self.newpagelist[self.newpageindex])
+        self.displaylabels(self.conpageline)
 
     def escape(self):
         print("into escape")
@@ -542,6 +627,14 @@ class Manager:
         self.newpagelist=[[]]
         self.window.con.grid_remove()
         self.window.lp.grid_remove()
+        self.window.menubox=ttk.Frame(self.window)
+        self.window.menubox.grid(row=0,column=0)
+        triggerconfig=Giflabel(self.window.menubox,0,self.triggerconfig)
+        triggerconfig.grid(row=0,column=0,padx=20)
+        leftbutton=Giflabel(self.window.menubox,1,self.left)
+        leftbutton.grid(row=0,column=1,padx=20)
+        rightbutton=Giflabel(self.window.menubox,2,self.right)
+        rightbutton.grid(row=0,column=2,padx=20)
         self.CNB.PAdjust(self.CNBpage)
         self.setuppage()
         with open(f'voc{self.CNBindex}.json', 'w') as file:  
@@ -563,8 +656,8 @@ class Manager:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("NBook")
-
+    root.title("NBook!")
+    
     # Simply set the theme
     root.tk.call("source", "azure.tcl")
     root.tk.call("set_theme", "dark")
@@ -575,8 +668,8 @@ if __name__ == "__main__":
     app.update()
     # Set a minsize for the window, and place it in the middle
     root.minsize(root.winfo_width(), root.winfo_height())
-    x_cordinate = int((root.winfo_screenwidth() / 2) - (root.winfo_width() / 2))
-    y_cordinate = int((root.winfo_screenheight() / 2) - (root.winfo_height() / 2))
+    x_cordinate = int((root.winfo_screenwidth() *23/40))# - (root.winfo_width() / 2)
+    y_cordinate = int((root.winfo_screenheight() *1/40)) #- (root.winfo_height() / 2))
     root.geometry("+{}+{}".format(x_cordinate, y_cordinate-20))
 
     root.mainloop()

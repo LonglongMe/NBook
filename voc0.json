@@ -49,8 +49,7 @@
             [
                 [
                     "she snubbed his (proposal)"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -70,8 +69,7 @@
             [
                 [
                     "(brace up)! put yourself together"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -91,8 +89,7 @@
             [
                 [
                     "lets see how will the plan (hatch out)"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -112,8 +109,7 @@
             [
                 [
                     "I'll (tan his hide) if I catch him"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -133,8 +129,7 @@
             [
                 [
                     "he had (intrigued) with his brother (against)the king"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -154,8 +149,7 @@
             [
                 [
                     "he won't put his career (on the line)"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -175,8 +169,7 @@
             [
                 [
                     "this can (be illustrated by) comparing the difference"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -196,8 +189,7 @@
             [
                 [
                     "I didn't expect to (bang into) him there"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -217,8 +209,7 @@
             [
                 [
                     "when they arrived, order went (out of the window)"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -238,8 +229,7 @@
             [
                 [
                     "New (code of conduct) lays down the ground rules"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -259,8 +249,7 @@
             [
                 [
                     "he is dependable (in the clutch)"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -284,14 +273,12 @@
             [
                 [
                     "It's hard to keep (on terms) with such a man"
-                ],
-                []
+                ]
             ],
             [
                 [
                     "He can (come to terms) with being poor"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -315,8 +302,7 @@
                 ],
                 [
                     "I enjoy being (in the thick of) things"
-                ],
-                []
+                ]
             ]
         ],
         "proficiency": 0
@@ -340,8 +326,107 @@
                 ],
                 [
                     "the new tax is already (in force)"
-                ],
-                []
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "wash",
+        "index": 15,
+        "collocation": [
+            "wash out"
+        ],
+        "meaning": [
+            [
+                "\u56e0\u4e0b\u96e8\u53d6\u6d88"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "rain (washed out) five of the last seven games"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "bay",
+        "index": 16,
+        "collocation": [
+            "at bay"
+        ],
+        "meaning": [
+            [
+                "\u5904\u4e8e\u7edd\u5883"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "the stag (at bay) is a dangerous foe"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "testify",
+        "index": 17,
+        "collocation": [
+            "testify against"
+        ],
+        "meaning": [
+            [
+                "\u4f5c\u4e0d\u5229\u4e8e..\u7684\u8bc1\u660e"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "he will not (testify against) his own brother"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "raid",
+        "index": 18,
+        "collocation": [
+            "bear raid"
+        ],
+        "meaning": [
+            [
+                "\u7a7a\u5934\u629b\u552e"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "(bear raid) ought be under control"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "bargain",
+        "index": 19,
+        "collocation": [
+            "bargain for"
+        ],
+        "meaning": [
+            [
+                "\u9884\u6599"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "i didn't (bargain for) his arrival"
+                ]
             ]
         ],
         "proficiency": 0
