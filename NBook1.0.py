@@ -231,19 +231,17 @@ class Manager:
         self.cxy=[0,0]#coordinate for config block
         self.state=0#0=reader 1=configer
         self.pagelinestr=[]#page line strings
-        self.pagelabellist=[]#labels ready to be given pagelinestrs
         self.nwlabel=[[],[],[]]#newword's configure block entry and labels
         self.owlabel=None
         self.oldword=None
-        self.nwlefthintlist=[]#newword's hint 
         self.deletelist=[]
         self.width=42
         self.width2=17
         self.endofline=3
         #s = ttk.Style()
         #s.configure('Treeview', rowheight=45)
-######################### MENU ##########################
-    def SetupMenu(self):
+
+    def SetupMenu(self):######################### MENU ##########################
         self.readmenu()
         self.window.col1 = ttk.Frame(self.window, padding=50)
         self.window.col1.grid(row=0, column=0)
@@ -277,8 +275,8 @@ class Manager:
         with open(f'voc{self.CNBindex}.json',mode='r',encoding='utf-8') as f:
             text=f.read()
         self.CNBdata=json.loads(text)
-######################### NOTEBOOK ##########################
-    def enternotbook(self,event):
+
+    def enternotbook(self,event):######################### NOTEBOOK ##########################
         self.CNBindex=self.btnlist.index(event.widget)
         self.readnotebook()
         self.CNBpage=self.CNB.currentpage
@@ -372,8 +370,8 @@ class Manager:
                 word=self.CNBword[self.pagelabellist.index[x]]
                 wordposition=[self.CNBpage,self.pagelabellist.index[x]]
         self.setuppage(word=word,wordpostion=wordposition)
-######################### CONFIGPAGE ##########################
-    def configblock(self,word:Word=None,wordposition=None):
+
+    def configblock(self,word:Word=None,wordposition=None):######################### CONFIGPAGE ##########################
         self.window.con = ttk.LabelFrame(self.window, text="AddWord", padding=0)
         self.window.con.grid(row=0, column=0 )
         alterpagebutton=ttk.Frame(self.window.con)
@@ -764,6 +762,7 @@ class Manager:
         while len(self.newpagelist[-1])>self.conpageline:
             self.newpagelist.append([self.newpagelist[-1][self.conpageline:]])
             self.newpagelist[-2]=self.newpagelist[-2][:self.conpageline]
+            self.newpageindex+=1
         while len(self.newpagelist[-1])<self.conpageline:
             self.newpagelist[-1].append([0,0,0])
         print(self.newpagelist[self.newpageindex],"from manageconfigpage turning to newword")
