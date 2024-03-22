@@ -430,5 +430,332 @@
             ]
         ],
         "proficiency": 0
+    },
+    {
+        "name": "rob",
+        "index": 20,
+        "collocation": [
+            "rob"
+        ],
+        "meaning": [
+            [
+                "\u593a\u8d70"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "an accident (robbed) his ability to walk"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "flare",
+        "index": 21,
+        "collocation": [
+            "flare up"
+        ],
+        "meaning": [
+            [
+                "\u53d1\u706b"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "you need no (flare up) merely because i mentioned it"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "greet",
+        "index": 22,
+        "collocation": [
+            "greeting arriving"
+        ],
+        "meaning": [
+            [
+                "\u63a5\u5f85\u5904"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "ten feet when you pass the (greeting arriving)"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "habitual",
+        "index": 23,
+        "collocation": [
+            "habitual criminal"
+        ],
+        "meaning": [
+            [
+                "\u60ef\u72af"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "that (habitual criminal) has been locked away"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "revenge",
+        "index": 24,
+        "collocation": [
+            "take revenge on"
+        ],
+        "meaning": [
+            [
+                "\u62a5\u590d"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "they are (taking revenge on) those who attacked them"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "ward",
+        "index": 25,
+        "collocation": [
+            "ward off"
+        ],
+        "meaning": [
+            [
+                "\u6321\u4f4f\uff0c\u907f\u5f00"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "he managed to (ward off) the punch"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "bottom",
+        "index": 26,
+        "collocation": [
+            "get to the bottom of"
+        ],
+        "meaning": [
+            [
+                "\u627e\u5230\u8d77\u56e0"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "we'll have to (get to the bottom of) all these mess"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "fluctuate",
+        "index": 27,
+        "collocation": [
+            "fluctuate violently"
+        ],
+        "meaning": [
+            [
+                "\u5927\u6da8\u5927\u843d"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "their heads (fluctuate violently) with the stock"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "jeopardize",
+        "index": 28,
+        "collocation": [
+            "jeopardize one's health"
+        ],
+        "meaning": [
+            [
+                "\u5371\u5bb3\u5065\u5eb7"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "overworking might (jeopardize your health)"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "ego",
+        "index": 29,
+        "collocation": [
+            "ego trip"
+        ],
+        "meaning": [
+            [
+                "\u8ffd\u6c42\u81ea\u6211\u6ee1\u8db3"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "i'm not on any kind of (ego trip)"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "equal",
+        "index": 30,
+        "collocation": [
+            "attach equal importance to"
+        ],
+        "meaning": [
+            [
+                "\u4e00\u89c6\u540c\u4ec1"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "you should (attach equal importance to) your kids"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "devil",
+        "index": 31,
+        "collocation": [
+            "speak of the devil",
+            "the devil to pay"
+        ],
+        "meaning": [
+            [
+                "\u8bf4\u66f9\u64cd\u66f9\u64cd\u5230"
+            ],
+            [
+                "\u5927\u9ebb\u70e6"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "(speak of the devil) and here she is"
+                ]
+            ],
+            [
+                [
+                    "there'll be (the devil to pay) if you scartch my car"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "shot",
+        "index": 32,
+        "collocation": [
+            "like a shot",
+            "big shot",
+            "long shot"
+        ],
+        "meaning": [
+            [
+                "\u98de\u5feb\u5730"
+            ],
+            [
+                "\u5927\u4eba\u7269"
+            ],
+            [
+                "\u9ad8\u98ce\u9669\u7684\u8d4c\u6ce8"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "he was off (like a shot) when he heard the news"
+                ]
+            ],
+            [
+                [
+                    "he is a (big shot) in politics"
+                ]
+            ],
+            [
+                [
+                    "the deal was a(long shot),but i have nothing to lose"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "boast",
+        "index": 33,
+        "collocation": [
+            "boast of "
+        ],
+        "meaning": [
+            [
+                "\u5938\u8000"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "a modest man never (boast of) his merits"
+                ]
+            ]
+        ],
+        "proficiency": 0
+    },
+    {
+        "name": "scrap",
+        "index": 34,
+        "collocation": [
+            "scarp"
+        ],
+        "meaning": [
+            [
+                "\u5435\u67b6"
+            ]
+        ],
+        "egsentence": [
+            [
+                [
+                    "he always get into (scarps) at schools"
+                ]
+            ]
+        ],
+        "proficiency": 0
     }
 ]

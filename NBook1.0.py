@@ -4,7 +4,8 @@ from PIL import Image,ImageTk
 import json
 from tkinter import font as tkFont
 import ctypes
-import threading
+#import threading
+import multiprocessing
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
 ScaleFactor=ctypes.windll.shcore.GetScaleFactorForDevice(0)
 
@@ -16,7 +17,7 @@ class Gifbutton(ttk.Button):
         self.frameindex=0
         self.gifstate=0
         self.openorclose=-1#notbookgif/
-        self.images=[ImageTk.PhotoImage(Image.open(f'assets/openbook ({i}).png').resize((130,130), Image.BICUBIC)) for i in range(19)]
+        self.images=[ImageTk.PhotoImage(Image.open(f'assets/bookgif/openbook ({i}).png').resize((130,130), Image.BICUBIC)) for i in range(19)]
         self.speed=35
         self.config(image=self.images[self.frameindex])
         self.bind("<Enter>", self.triggerplay) 
@@ -55,17 +56,22 @@ class Giflabel(ttk.Label):
         super().__init__(master)
         self.frameindex=0
         self.type=type
-        self.openorclose=-1
+        self.openorclose=1
         self.speed=20
         self.pathlist=['assets/hints/config.png','assets/hints/left.png','assets/hints/right.png','assets/hints/delete.png']   
         self.images=[ImageTk.PhotoImage(Image.open(self.pathlist[type]).resize((50+i*2,50+i*2), Image.BICUBIC)) for i in range(5)]
         self.bind("<Button-1>",command)
         self.config(image=self.images[self.frameindex])
-        self.bind("<Enter>", self.triggerplay) 
-        self.bind("<Leave>", self.triggerplay)
+        self.bind("<Enter>", self.movein) 
+        self.bind("<Leave>", self.moveout)
         self.config(padding=10)
-    def triggerplay(self,event):
-        self.openorclose*=-1
+    def movein(self,event):
+        self.openorclose=1
+        self.triggerplay()
+    def moveout(self,event):
+        self.openorclose=-1
+        self.triggerplay()
+    def triggerplay(self):
         def play():
             end=0
             if self.openorclose==1:
@@ -81,7 +87,28 @@ class Giflabel(ttk.Label):
             if end!=1:
                 self.master.after(self.speed,play)       
         play()
-   
+
+class Giftext(ttk.Label):
+    def __init__(self,master,text,command):
+        super().__init__(master)
+        self.config(text=text)
+        self.font1 = tkFont.Font(family="楷体", size=12)
+        self.font2 = tkFont.Font(family="楷体", size=14,weight='bold')
+        self.bind("<Button-1>",command)
+        self.config(font=self.font1)
+        self.bind("<Enter>", self.movein) 
+        self.bind("<Leave>", self.moveout)
+        self.touched=0
+        self.config(padding=2)
+    def movein(self,event):
+        self.config(font=self.font2)
+        self.touched=1
+        self.config(padding=1)
+    def moveout(self,event):
+        self.config(font=self.font1)
+        self.touched=0
+        self.config(padding=2)
+
 class Word:
     def __init__(self,index,name='',len=0):
         self.name=name
@@ -117,6 +144,21 @@ class Word:
         self.hadchanged=1
         print(self.collocation,self.meaning,self.egsentence)
 
+    def remove(self,targetlist):
+        type=targetlist[0]
+        if type==1:
+            if self.collocation!=[]:
+                del self.collocation[targetlist[1]]
+                del self.meaning[targetlist[1]]
+                del self.egsentence[targetlist[1]]
+        elif type==2:
+            if self.meaning!=[[]]:
+                del self.meaning[targetlist[1]][targetlist[2]]
+                del self.egsentence[targetlist[1]][targetlist[2]]
+        elif type==3:
+            if self.egsentence!=[[[]]]:
+                del self.egsentence[targetlist[1]][targetlist[2]][targetlist[3]]
+
 class Vocbook:
     def __init__(self,name,index,pagedatalist,currentpage,lastwordindex):
         self.name=name
@@ -129,27 +171,27 @@ class Vocbook:
         self.pageline=22
 
     def PAdjust(self,ind=0):
-        pageline=20
+        pageline=self.pageline
         sum=0
         pageindex=0
         newlist=[[]]
         for pages in self.pagedatalist[ind:]:
             for words in pages:
-                tepstart=1
+                tepstart=0
                 if sum+words[3]>=self.pageline:
                     if sum+words[3]==self.pageline:
-                        newlist[pageindex].append([words[0],tepstart,words[3],words[3]])
+                        newlist[pageindex].append([words[0],0,words[3],words[3]])
                         newlist.append([])
                         pageindex+=1
                         sum=0
                     else:
-                        newlist[pageindex].append([words[0],1,pageline-sum,words[3]])
+                        newlist[pageindex].append([words[0],0,pageline-sum,words[3]])
                         newlist.append([])
                         pageindex+=1
-                        tepstart=pageline-sum+1
+                        tepstart=pageline-sum
                         while words[3]-tepstart>=pageline:
                             newlist[pageindex].append([words[0],tepstart,tepstart+pageline,words[3]])
-                            tepstart+=20
+                            tepstart+=self.pageline
                             newlist.append([])
                             pageindex+=1
                         sum=words[3]-tepstart
@@ -159,10 +201,6 @@ class Vocbook:
                     sum+=words[3]
                     newlist[pageindex].append([words[0],0,words[3]-1,words[3]])
         self.pagedatalist=self.pagedatalist[:ind]+newlist
-
-
-    def output(self):
-        pass
 
 class Manager:
     def __init__(self,master):
@@ -180,8 +218,9 @@ class Manager:
         self.CNBline=0#how many lines for one page alter according to state
         self.CNBpage=0#current page of the vocbook
         self.SetupMenu()
-        self.cfont = tkFont.Font(family="楷体", size=12)
-        self.efont = tkFont.Font(family="Ink Free", size=13)
+        self.csize=12
+        self.cfont = tkFont.Font(family="楷体", size=self.csize)
+        self.efont = tkFont.Font(family="Ink Free", size=self.csize+1)
         self.e2font=tkFont.Font(family="Ink Free", size=13)
         self.cstyle = ttk.Style()
         self.cstyle.configure("TButton", font=self.cfont)
@@ -197,11 +236,13 @@ class Manager:
         self.owlabel=None
         self.oldword=None
         self.nwlefthintlist=[]#newword's hint 
+        self.deletelist=[]
         self.width=42
         self.width2=17
+        self.endofline=3
         #s = ttk.Style()
         #s.configure('Treeview', rowheight=45)
-
+######################### MENU ##########################
     def SetupMenu(self):
         self.readmenu()
         self.window.col1 = ttk.Frame(self.window, padding=50)
@@ -236,22 +277,17 @@ class Manager:
         with open(f'voc{self.CNBindex}.json',mode='r',encoding='utf-8') as f:
             text=f.read()
         self.CNBdata=json.loads(text)
-
+######################### NOTEBOOK ##########################
     def enternotbook(self,event):
         self.CNBindex=self.btnlist.index(event.widget)
         self.readnotebook()
         self.CNBpage=self.CNB.currentpage
         self.CNBline=self.CNB.pageline
-
-        thread = threading.Thread(target=self.setuppage(), args=())
-        thread.start()
-        thread.join()
-        #self.master.mainloop()
-        
-        
-        #thread = threading.Thread(target=self.displaylabels, args=(self.CNBline,))
-        #thread.start()
+        #mp=multiprocessing.Process(target=self.setuppage(), args=())
+        #mp.start()
+        #mp.join()
         self.window.col1.grid_remove()
+        self.setuppage()
         self.window.menubox=ttk.Frame(self.window)
         self.window.menubox.grid(row=0,column=0)
         triggerconfig=Giflabel(self.window.menubox,0,self.triggerconfig)
@@ -260,39 +296,33 @@ class Manager:
         leftbutton.grid(row=0,column=1,padx=20)
         rightbutton=Giflabel(self.window.menubox,2,self.right)
         rightbutton.grid(row=0,column=2,padx=20)
-        self.displaylabels(self.CNBline)
-
+        
     def setuppage(self,event=None,word=None,wordpostion=None):#start setuppage 
         if self.state==0:
             self.window.lp = ttk.LabelFrame(self.window, text=f"Page:{self.CNBpage}", padding=(5,25))
             self.window.lp.grid(row=1, column=0,padx=(10, 10), pady=(10, 10))
+            canvas = tk.Canvas(self.window.lp, width=900, height=1100, bg='#2b2b2b')
+            canvas.grid(row=1,column=0)
             self.decodeintostr(self.CNB.pagedatalist,self.CNBpage,self.CNBline)
-            self.initlabels(self.CNBline,self.window.lp)
-            self.configlabels(self.pagelinestr)
-            self.displaylabels(self.CNBline)
+            self.configcanvas(self.pagelinestr,self.window.lp)
+            #self.initcanvatexts(self.CNBline,canvas)
+            #self.configlabels(self.pagelinestr)
+            #self.displaylabels(self.CNBline)
         if self.state==1:
             self.window.menubox.grid_remove()
             self.window.lp.grid_remove()
             self.window.lp = ttk.LabelFrame(self.window, text="New Words", padding=(5,25))
             self.window.lp.grid(row=1, column=0,padx=(10, 10), pady=(10, 10))
             self.configblock()
-            self.initlabels(self.conpageline,self.window.lp)
+            #self.initcanvatexts(self.conpageline,self.window.lp)
             self.decodeintostr(self.newpagelist,0,self.conpageline)
-            self.configlabels(self.pagelinestr)
-            self.displaylabels(self.conpageline)
+            self.configcanvas(self.pagelinestr,self.window.lp)
+            #self.configlabels(self.pagelinestr)
+            #self.displaylabels(self.conpageline)
         if self.state==2:
             self.window.menubox.grid_remove()
             self.configblock(word,wordpostion)
             
-    def initlabels(self,pagelength,master):#list of ttklabel
-        self.pagelabellist=[]
-        for i in range(pagelength):
-            a=ttk.Label(master,text="",width=self.width2,font=self.cfont,justify='center')
-            b=ttk.Label(master,text="",font=self.efont,width=self.width) 
-            c=ttk.Separator(master)
-            d=ttk.Separator(master)
-            self.pagelabellist.append([a,b,c,d]) 
-
     def decodeintostr(self,pagedatalist,currentpage,pagelength):#list of strings
         current=pagedatalist[currentpage]
         pagelinestr=[]
@@ -309,35 +339,27 @@ class Manager:
             pagelinestr+=wordlinedata[word4list[1]:word4list[2]+1]
         while len(pagelinestr)<pagelength:
             pagelinestr.append([0,0,0])
+        while len(pagelinestr)>pagelength:
+            pagelinestr=pagelinestr[:-1]
         self.pagelinestr=pagelinestr
         print(self.pagelinestr)
 
-    def configlabels(self,pagelinestr):#config label.text
-        i=-1
-        for x in pagelinestr:
-            i+=1
-            print(x)
-            if x[2]==1:
-                self.pagelabellist[i][0].config(text="◉"+x[0])
-                self.pagelabellist[i][1].config(text=x[1])
-                #print("configured in")
-            else:
-                if x[0]!=0:
-                    self.pagelabellist[i][0].config(text=x[0])
-                    self.pagelabellist[i][1].config(text=x[1])
+    def configcanvas(self,pagelinestr,master):
+        height=40+self.csize*4*len(pagelinestr)
+        self.canvas = tk.Canvas(master, width=1100, height=height, bg='#353535')
+        self.canvas.grid(row=1,column=0)
+        for i in range(len(pagelinestr)):
+            if pagelinestr[i]!=[0,0,0]:
+                if pagelinestr[i][2]==1:
+                    text_id = self.canvas.create_text(20,40+self.csize*4*i ,text='◉'+self.pagelinestr[i][0], anchor="w",fill="white",width=270,font=self.cfont)
+                    text_id = self.canvas.create_text(280,40+self.csize*4*i ,text=self.pagelinestr[i][1], anchor="w",fill="white",width=900,font=self.efont)
+                elif pagelinestr[i][0]!=0:
+                    text_id = self.canvas.create_text(20,40+self.csize*4*i ,text='◯'+self.pagelinestr[i][0], anchor="w",fill="white",width=270,font=self.cfont)
+                    text_id = self.canvas.create_text(280,40+self.csize*4*i ,text=self.pagelinestr[i][1], anchor="w",fill="white",width=900,font=self.efont)
                 else:
-                    if x[1]!=0:
-                        self.pagelabellist[i][1].config(text=x[1])
-                    else:
-                        self.pagelabellist[i][1].config(text="")
-                        self.pagelabellist[i][0].config(text="")
-
-    def displaylabels(self,pagelength):#grid labels
-        for i in range(pagelength-1):
-            self.pagelabellist[i][0].grid(row=i*2,column=0,padx=1,pady=1,columnspan=1)
-            self.pagelabellist[i][1].grid(row=i*2,column=1,padx=1,pady=1,columnspan=1)
-            self.pagelabellist[i][2].grid(row=i*2+1,column=0,padx=1,pady=0,sticky="nsew")
-            self.pagelabellist[i][3].grid(row=i*2+1,column=1,padx=1,pady=0,sticky="nsew")
+                    text_id = self.canvas.create_text(280,40+self.csize*4*i ,text=self.pagelinestr[i][1], anchor="w",fill="white",width=900,font=self.efont)
+            line_id = self.canvas.create_line(10,40+self.csize*4*i+2*self.csize,260, 40+self.csize*4*i+2*self.csize , fill="#585858")
+            line_id = self.canvas.create_line(270,40+self.csize*4*i+2*self.csize,1170, 40+self.csize*4*i+2*self.csize , fill="#585858")
 
     def triggerconfig(self,event=None):#start configpage
         self.state=1
@@ -350,7 +372,7 @@ class Manager:
                 word=self.CNBword[self.pagelabellist.index[x]]
                 wordposition=[self.CNBpage,self.pagelabellist.index[x]]
         self.setuppage(word=word,wordpostion=wordposition)
-
+######################### CONFIGPAGE ##########################
     def configblock(self,word:Word=None,wordposition=None):
         self.window.con = ttk.LabelFrame(self.window, text="AddWord", padding=0)
         self.window.con.grid(row=0, column=0 )
@@ -366,27 +388,25 @@ class Manager:
 
             lab1=ttk.Label(self.window.con,text='N:')
             lab1.grid(row=0, column=0, padx=(3, 3), pady=(5, 5), sticky="nsew")
-            self.nwlefthintlist.append(lab1)
             en1=ttk.Entry(self.window.con,width=10)
             en1.grid(row=0,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
             en1.bind("<KeyPress>", self.movefocus)
             en1.bind("<Button-1>",self.adjustcxy)
             self.nwlabel[0]=[en1,0,0,0]
             
-            lab2=ttk.Label(self.window.con,text='C:')
+            lab2=Giftext(self.window.con,text='x',command=self.remove)
             lab2.grid(row=1, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
-            self.nwlefthintlist.append(lab2)
+            self.deletelist.append(lab2)
             en2=ttk.Entry(self.window.con,width=15)
             en2.grid(row=1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
             en2.bind("<KeyPress>", self.movefocus)
             en2.bind("<Button-1>",self.adjustcxy)
             b=ttk.Label(self.window.con,width=self.width,text="|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
             b.grid(row=1,column=2,padx=(0, 4), pady=(5, 5), sticky="nsew")
-            self.nwlefthintlist.append(b)
             self.nwlabel[1]=[en2,b,[1,0,0,0],0]
-            lab3=ttk.Label(self.window.con,text='M:')
+            lab3=Giftext(self.window.con,text='x',command=self.remove)
             lab3.grid(row=2, column=0, padx=(3, 3), pady=(5, 5), sticky="nsew")
-            self.nwlefthintlist.append(lab3)
+            self.deletelist.append(lab3)
             en3=ttk.Entry(self.window.con,width=10,font=self.cfont)
             en3.grid(row=2,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
             en3.bind("<KeyPress>", self.movefocus)
@@ -397,6 +417,7 @@ class Manager:
             en4.bind("<KeyPress>", self.movefocus)
             en4.bind("<Button-1>",self.adjustcxy)
             self.nwlabel[2]=[en3,en4,[2,0,0,0],[3,0,0,0]]
+            self.nwlabel[0][0].focus_set()
 
         elif self.state==2:
             pass
@@ -408,6 +429,7 @@ class Manager:
                 if event.widget==self.nwlabel[i][j]:
                     self.cxy[0]=i
                     self.cxy[1]=j
+        self.nwlabel[self.cxy[0]][self.cxy[1]].focus_set()
         print(self.cxy)
 
     def movefocus(self,event):
@@ -454,8 +476,8 @@ class Manager:
         
         if m!=None:
             d=event.widget.get()
-
-            if self.nwlabel[self.cxy[0]][2]==0 and self.nwlabel[self.cxy[0]][3]==0:#type:name
+            row=event.widget.grid_info()['row']
+            if self.nwlabel[self.cxy[0]][1]==0:#type:name
                 self.newword.name=d
                 if m=='d':
                     self.cxy[0]+=1
@@ -469,13 +491,16 @@ class Manager:
                 if m=='d':
                     if self.cxy[0]==len(self.nwlabel)-1:#if end of config page create  NEW MEANING ENTRY
                         a=ttk.Entry(self.window.con,width=10,font=self.cfont)
-                        a.grid(row=self.cxy[0]+1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
+                        a.grid(row=row+1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
                         a.bind("<KeyPress>", self.movefocus)
                         a.bind("<Button-1>",self.adjustcxy)
                         b=ttk.Entry(self.window.con,width=self.width,font=self.efont)
-                        b.grid(row=self.cxy[0]+1,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
+                        b.grid(row=row+1,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
                         b.bind("<KeyPress>", self.movefocus)
                         b.bind("<Button-1>",self.adjustcxy)
+                        lab=Giftext(self.window.con,text='x',command=self.remove)
+                        lab.grid(row=row+1, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
+                        self.deletelist.append(lab)
                         self.nwlabel.append([a,b,[2,self.nwlabel[self.cxy[0]][2][1],0,0],[3,self.nwlabel[self.cxy[0]][2][1],0,0]])
                     self.cxy[0]+=1
 
@@ -487,21 +512,27 @@ class Manager:
                 elif m=='r':
                     if self.cxy[0]==len(self.nwlabel)-1 or self.nwlabel[self.cxy[0]+1][0]==0:
                         b=ttk.Entry(self.window.con,width=self.width,font=self.efont)
-                        b.grid(row=self.cxy[0]+1,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
                         b.bind("<KeyPress>", self.movefocus)
                         b.bind("<Button-1>",self.adjustcxy)
+                        b.grid(row=row+1,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
+                        lab=Giftext(self.window.con,text='x',command=self.remove)
+                        lab.grid(row=row+1, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
+                        self.deletelist.append(lab)
                         self.nwlabel.insert(self.cxy[0]+1,[0,b,0,[3,self.nwlabel[self.cxy[0]][3][1]+1,self.nwlabel[self.cxy[0]][3][2],self.nwlabel[self.cxy[0]][3][3]+1]])
                         self.cxy[0]+=1
 
                 elif m=='d':
                     if self.cxy[0]==len(self.nwlabel)-1:
                         a=ttk.Entry(self.window.con,width=15)
-                        a.grid(row=self.cxy[0]+1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
+                        a.grid(row=row+1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
                         a.bind("<KeyPress>", self.movefocus)
                         a.bind("<Button-1>",self.adjustcxy)
-                        b=ttk.Label(self.window.con,self.width,text="-------------------------------------------------------------------------------------------")
-                        b.grid(row=self.cxy[0]+1,column=2,padx=(0, 4), pady=(5, 5), sticky="nsew")
+                        b=ttk.Label(self.window.con,width=self.width,text="|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+                        b.grid(row=row+1,column=2,padx=(0, 4), pady=(5, 5), sticky="nsew")
                         self.nwlabel.append([a,b,[1,self.nwlabel[self.cxy[0]][3][1],0,0],0])
+                        lab=Giftext(self.window.con,text='x',command=self.remove)
+                        lab.grid(row=row+1, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
+                        self.deletelist.append(lab)
                         self.cxy[0]+=1
                     else:
                         if self.nwlabel[self.cxy[0]+1][1]!=0:
@@ -519,13 +550,16 @@ class Manager:
                             a+=1
                         if self.nwlabel[a-1][3][2]==self.nwlabel[self.cxy[0]][2][2]:#wheter meaning is end of the collocation
                             a1=ttk.Entry(self.window.con,width=10,font=self.cfont)
-                            a1.grid(row=self.cxy[0]+1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
+                            a1.grid(row=row+1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
                             a1.bind("<KeyPress>", self.movefocus)
                             a1.bind("<Button-1>",self.adjustcxy)
                             b=ttk.Entry(self.window.con,width=self.width,font=self.efont)
-                            b.grid(row=self.cxy[0]+1,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
+                            b.grid(row=row+1,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
                             b.bind("<KeyPress>", self.movefocus)
                             b.bind("<Button-1>",self.adjustcxy)
+                            lab=Giftext(self.window.con,text='x',command=self.remove)
+                            lab.grid(row=row+1, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
+                            self.deletelist.append(lab)
                             self.nwlabel.insert(a,[a1,b,[2,self.nwlabel[self.cxy[0]][3][1],self.nwlabel[self.cxy[0]][3][2]+1,0],[3,self.nwlabel[self.cxy[0]][3][1],self.nwlabel[self.cxy[0]][3][2]+1,0]])
                             self.cxy[0]+=1
                     if m=='d':
@@ -542,17 +576,23 @@ class Manager:
                         self.cxy[1]=0
                     elif m=='r':
                         b=ttk.Entry(self.window.con,width=self.width,font=self.efont)
-                        b.grid(row=self.cxy[0]+1,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
+                        b.grid(row=row+1,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
                         b.bind("<KeyPress>", self.movefocus)
+                        lab=Giftext(self.window.con,text='x',command=self.remove)
+                        lab.grid(row=row+1, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
+                        self.deletelist.append(lab)
                         self.nwlabel.insert(self.cxy[0]+1,[0,b,0,[3,self.nwlabel[self.cxy[0]][3][1],self.nwlabel[self.cxy[0]][3][2],1]])
                         self.cxy[0]+=1
                     elif m=='d':
                         if self.cxy[0]==len(self.nwlabel)-1:
                             a=ttk.Entry(self.window.con,width=15)
-                            a.grid(row=self.cxy[0]+1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
-                            b=ttk.Label(self.window.con,width=self.width,text="-------------------------------------------------------------------------------------------")
-                            b.grid(row=self.cxy[0]+1,column=2,padx=(0, 4), pady=(5, 5), sticky="nsew")
+                            a.grid(row=row+1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
+                            b=ttk.Label(self.window.con,width=self.width,text="|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+                            b.grid(row=row+1,column=2,padx=(0, 4), pady=(5, 5), sticky="nsew")
                             a.bind("<KeyPress>", self.movefocus)
+                            lab=Giftext(self.window.con,text='x',command=self.remove)
+                            lab.grid(row=row+1, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
+                            self.deletelist.append(lab)
                             self.nwlabel.append([a,b,[1,self.nwlabel[self.cxy[0]][3][1]+1,0,0],0])
                             self.cxy[0]+=1
                             self.cxy[1]=0
@@ -571,43 +611,153 @@ class Manager:
                 self.window.con.grid_remove()
                 if m=='nw':
                     self.configblock()
-                    thread = threading.Thread(target=turnnewword, args=())
-                    thread.start()
+                    mp=multiprocessing.Process(target=turnnewword, args=())
+                    mp.start()
+                    #thread = threading.Thread(target=turnnewword, args=())
+                    #thread.start()
                 elif m=="esc":
                     turnnewword()
 
             print(self.cxy)
-            if m!='esc' or m!='nw':
+            if m!='esc' and m!='nw':
                 self.nwlabel[self.cxy[0]][self.cxy[1]].focus_set()
 
     def remove(self,event):
-        pass
+        for x in self.deletelist:
+            #print(x)
+            if x.touched==1:
+                order=self.deletelist.index(x)+1
+                x.touched=0
+                break
+        self.newword.remove(self.nwlabel[order][2])
+        if self.nwlabel[order][3]!=0:
+            self.newword.remove(self.nwlabel[order][3])
+        print(self.nwlabel,order,self.cxy)
+        if self.nwlabel[order][3]==0:#collocation
+            c=self.nwlabel[order][2][1]
+            while order<=len(self.nwlabel)-1:
+                x=self.nwlabel[order]
+                if x[3]==0 and x[2]!=0 and x[2][1]==c:
+                    self.delete(x)
+                    self.deletex(self.deletelist[order-1])
+                    print("deledcollocation")
+                elif x[3]!=0 and x[3][1]==c:
+                    self.delete(x)
+                    self.deletex(self.deletelist[order-1])
+                    print("deletemeanig")
+                else:
+                    print("leave")
+                    break 
+
+            print(self.nwlabel)
+            if order>=len(self.deletelist)-1:
+                for x in self.nwlabel[order:]:
+                    if x[2]!=0:
+                        if x[2][1]>c:
+                            x[2][1]-=1
+                    if x[3]!=0:
+                        if x[3][1]>c:
+                            x[3][1]-=1   
+            print(self.nwlabel)
+        elif self.nwlabel[order][0]==0:#egsentence line
+            c=self.nwlabel[order][3][1]
+            m=self.nwlabel[order][3][2]
+            e=self.nwlabel[order][3][3]
+            del self.nwlabel[order]
+            if order>=len(self.deletelist)-1:
+                for x in self.nwlabel[order:]:
+                    if x[0]==0 and x[3][1]==c:
+                        x[3][3]-=1
+
+        else:#meaning line
+            c=self.nwlabel[order][3][1]
+            m=self.nwlabel[order][3][2]
+            for x in self.nwlabel[order:]:
+                if x[3][2]==m:
+                    del x
+                else:
+                    break
+            if order>=len(self.deletelist)-1:
+                for x in self.nwlabel[order:]:
+                    if x[2]!=0:
+                        if x[2][1]==c:
+                            x[3][2]-=1
+                            x[2][2]-=1
+                    elif x[3]!=0:
+                        if x[2][1]==c:
+                            x[3][2]-=1
+        self.cxy=[order,0]
+        self.nwlabel[self.cxy[0]][self.cxy[1]].focus_set()
+        if len(self.nwlabel)==1:
+            self.nwlabel.append([])
+            self.nwlabel.append([])
+            lab2=Giftext(self.window.con,text='x',command=self.remove)
+            lab2.grid(row=1, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
+            self.deletelist.append(lab2)
+            lab3=Giftext(self.window.con,text='x',command=self.remove)
+            lab3.grid(row=2, column=0,padx=(3, 3), pady=(5, 5), sticky="nsew")
+            self.deletelist.append(lab3)
+            en2=ttk.Entry(self.window.con,width=15)
+            en2.grid(row=1,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
+            en2.bind("<KeyPress>", self.movefocus)
+            en2.bind("<Button-1>",self.adjustcxy)
+            b=ttk.Label(self.window.con,width=self.width,text="|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+            b.grid(row=1,column=2,padx=(0, 4), pady=(5, 5), sticky="nsew")
+            self.nwlefthintlist.append(b)
+            self.nwlabel[1]=[en2,b,[1,0,0,0],0]
+            en3=ttk.Entry(self.window.con,width=10,font=self.cfont)
+            en3.grid(row=2,column=1,padx=(0, 4), pady=(5, 5), sticky="nsew")
+            en3.bind("<KeyPress>", self.movefocus)
+            en3.bind("<Button-1>",self.adjustcxy)
+            en4=ttk.Entry(self.window.con,width=self.width,font=self.efont)
+            en4.grid(row=2,column=2,padx=(3, 4), pady=(5, 5), sticky="nsew")
+            en4.bind("<KeyPress>", self.movefocus)
+            en4.bind("<Button-1>",self.adjustcxy)
+            self.nwlabel[2]=[en3,en4,[2,0,0,0],[3,0,0,0]]
+            self.nwlabel[1][0].focus_set()
+
+    def delete(self,x):
+        if x[0]!=0:
+            x[0].grid_remove()
+        if x[1]!=0:
+            x[1].grid_remove()
+        self.nwlabel.remove(x)
+
+    def deletex(self,x):
+        print(x.grid_info()['row'])
+        x.grid_remove()
+        self.deletelist.remove(x)
 
     def left(self,event=None):
         if self.state==1:
             if self.newpageindex!=0:
                 self.newpageindex-=1
                 self.configlabels(self.newpagelist[self.newpageindex])
-                self.displaylabels(self.conpageline)
+                #self.displaylabels(self.conpageline)
+                self.window.lp.config(text=f"Page{self.newpageindex}")
         else:
+            
             if self.CNBpage!=0:
+                self.canvas.destroy()
                 self.CNBpage-=1
                 self.decodeintostr(self.CNB.pagedatalist,self.CNBpage,self.CNBline)
-                self.decodeintostr(self.CNB.pagedatalist,self.CNBpage,self.CNBline)
-                self.configlabels(self.pagelinestr)
+                self.configcanvas(self.pagelinestr,self.window.lp)
+                self.window.lp.config(text=f"Page{self.CNBpage}")
 
     def right(self,event=None):
         if self.state==1:
             if self.newpageindex!=len(self.newpagelist)-1:
                 self.newpageindex+=1
                 self.configlabels(self.newpagelist[self.newpageindex])
-                self.displaylabels(self.conpageline)
+                #self.displaylabels(self.conpageline)
+                self.window.lp.config(text=f"Page{self.newpageindex}")
         else:
             if self.CNBpage!=len(self.CNB.pagedatalist)-1:
+                self.canvas.destroy()
                 self.CNBpage+=1
                 self.decodeintostr(self.CNB.pagedatalist,self.CNBpage,self.CNBline)
-                self.configlabels(self.pagelinestr)
-                #self.displaylabels(self.conpageline)
+                self.configcanvas(self.pagelinestr,self.window.lp)
+                self.window.lp.config(text=f"Page{self.CNBpage}")
 
     def manageconfigpage(self):
         self.newpagelist[-1]=[x for x in self.newpagelist[-1]  if x!=[0,0,0] ]
@@ -648,10 +798,6 @@ class Manager:
     def update(self):
         #self.DetectChangeScene()
         self.window.update()
-
-
-
-
 
 
 if __name__ == "__main__":
@@ -853,3 +999,176 @@ if __name__ == "__main__":
             for i in range(1):
                 self.treeview.item(item[i],tags='oddrow')  # 对每一个单元格命名
                 self.treeview.tag_configure('oddrow',font=self.cfont)"""
+
+#ancinet configlabels
+
+"""
+    def configlabels(self,pagelinestr):#config label.text
+        i=-1
+        for x in pagelinestr:
+            i+=1
+            print(x,i,len(pagelinestr))
+            if x[2]==1:
+                self.pagelabellist[i][0].config(text="◉"+x[0])
+                self.pagelabellist[i][1].config(text=x[1])
+                #print("configured in")
+            else:
+                if x[0]!=0:
+                    self.pagelabellist[i][0].config(text="◦"+x[0])
+                    self.pagelabellist[i][1].config(text=x[1])
+                else:
+                    if x[1]!=0:
+                        self.pagelabellist[i][1].config(text=x[1])
+                    else:
+                        self.pagelabellist[i][1].config(text="")
+                        self.pagelabellist[i][0].config(text="")
+
+    def displaylabels(self,pagelength):#grid labels
+        for i in range(pagelength):
+            self.pagelabellist[i][0].grid(row=i*2,column=0,padx=1,pady=1,columnspan=1)
+            self.pagelabellist[i][1].grid(row=i*2,column=1,padx=1,pady=1,columnspan=1)
+            self.pagelabellist[i][2].grid(row=i*2+1,column=0,padx=1,pady=0,sticky="nsew")
+            self.pagelabellist[i][3].grid(row=i*2+1,column=1,padx=1,pady=0,sticky="nsew")
+            
+            
+        def initlabels(self,pagelength,master):#list of ttklabel
+        self.pagelabellist=[]
+        for i in range(pagelength):
+            a=ttk.Label(master,text="",width=self.width2,font=self.cfont,justify='center')
+            b=ttk.Label(master,text="",font=self.efont,width=self.width) 
+            c=ttk.Separator(master)
+            d=ttk.Separator(master)
+            self.pagelabellist.append([a,b,c,d]) 
+
+    def initcanvatexts(self,pagelength,master):#list of ttklabel
+        self.pagelabellist=[]
+        for i in range(pagelength):
+            ta = master.create_text(20,40+self.csize*4*i ,text='◉'+self.pagelinestr[i][0], anchor="w",fill="white",width=200,font=self.cfont)
+            tb = master.create_text(280,40+self.csize*4*i ,text=self.pagelinestr[i][1], anchor="w",fill="white",width=600,font=self.efont)
+            la = master.create_line(10,40+self.csize*4*i+2*self.csize,260, 40+self.csize*4*i+2*self.csize , fill="#585858")
+            lb = master.create_line(270,40+self.csize*4*i+2*self.csize,890, 40+self.csize*4*i+2*self.csize , fill="#585858")
+     
+            self.pagelabellist.append([ta,tb]) 
+
+"""
+
+#ancient treeview approach
+"""
+import tkinter as tk  
+from tkinter import ttk  
+from tkinter import font as tkFont
+import ctypes
+
+#ctypes.windll.shcore.SetProcessDpiAwareness(1)
+#ScaleFactor=ctypes.windll.shcore.GetScaleFactorForDevice(0)
+
+
+from tkintertable import TableCanvas  
+
+ 
+  
+import tkinter as tk  
+from tkinter import ttk  
+import ctypes
+ctypes.windll.shcore.SetProcessDpiAwareness(1)
+ScaleFactor=ctypes.windll.shcore.GetScaleFactorForDevice(0)
+# 创建主窗口  
+root = tk.Tk()  
+root.title("Ttk Listbox 示例")  
+root.tk.call("source", "azure.tcl")
+root.tk.call("set_theme", "dark")
+root.tk.call('tk', 'scaling', ScaleFactor/80)  
+# 创建一个Frame来放置Listbox  
+frame = ttk.Frame(root, padding=1)  
+frame.pack(fill=tk.BOTH, expand=True)  
+a=ttk.Label(frame,width=10,text="-------------------")
+a.grid(row=0,column=1)
+for i in range(1,100):
+    a=ttk.Separator(frame)
+    a.grid(row=i,column=1,pady=5,padx=0)
+
+  
+# 运行Tkinter主循环  
+root.mainloop()
+
+
+
+
+# 创建 Tkinter 窗口  
+root = tk.Tk()  
+root.title("TkinterTable 示例")  
+  
+# 创建表格对象  
+table = TableCanvas(root)  
+  
+# 定义表格数据和列标题  
+data = [  
+    ['姓名', '年龄', '城市'],  
+    ['Alice', 25, 'New York'],  
+    ['Bob', 32, 'Paris'],  
+    ['Charlie', 18, 'London'],  
+]  
+  
+# 将数据添加到表格中  
+table.createTable(data, showtoolbar=False, showstatusbar=False)  
+  
+# 配置表格的样式（可选）  
+table.configure(stretch='all', selectmode='browse')  
+  
+# 将表格添加到窗口中  
+table.pack(fill='both', expand=True)  
+  
+#root.tk.call('tk', 'scaling', ScaleFactor/70)# 运行 Tkinter 主循环  
+root.mainloop()
+
+       self.treeview = ttk.Treeview(
+            self.window.lp,
+            #selectmode="browse",
+            show="headings",
+            columns=("meaning","egsentence"),
+            height=10,
+        )
+        #self.treeview.grid(row=1,column=1)
+        #self.treeview.pack(expand=True, fill="both") 
+        # Treeview columns
+        self.treeview.column("meaning", anchor="w", width=120)
+        self.treeview.column("egsentence", anchor="w", width=200)
+        self.treeview.heading("meaning", text="meaning")  
+        self.treeview.heading("egsentence", text="egsentence") 
+        # Define treeview data
+        treeview_data = [
+            ("", 1, "Parent", ("Item 1", "Value 1")),
+            (1, 2, "Child", ("Subitem 1.1", "Value 1.1")),
+            (1, 3, "Child", ("Subitem 1.2", "Value 1.2")),
+            (1, 4, "Child", ("Subitem 1.3", "Value 1.3")),
+            (1, 5, "Child", ("Subitem 1.4", "Value 1.4")),
+            ("", 6, "Parent", ("Item 2", "Value 2")),
+            (6, 7, "Child", ("Subitem 2.1", "Value 2.1")),
+            (6, 8, "Sub-parent", ("Subitem 2.2", "Value 2.2")),
+            (8, 9, "Child", ("Subitem 2.2.1", "Value 2.2.1")),
+            (8, 10, "Child", ("Subitem 2.2.2", "Value 2.2.2")),
+            (8, 11, "Child", ("Subitem 2.2.3", "Value 2.2.3")),
+            (6, 12, "Child", ("Subitem 2.3", "Value 2.3")),
+            (6, 13, "Child", ("Subitem 2.4", "Value 2.4")),
+            ("", 14, "Parent", ("Item 3", "Value 3")),
+            (14, 15, "Child", ("Subitem 3.1", "Value 3.1")),
+            (14, 16, "Child", ("Subitem 3.2", "Value 3.2")),
+            (14, 17, "Child", ("Subitem 3.3", "Value 3.3")),
+            (14, 18, "Child", ("Subitem 3.4", "Value 3.4")),
+            ("", 19, "Parent", ("Item 4", "Value 4")),
+            (19, 20, "Child", ("Subitem 4.1", "Value 4.1")),
+            (19, 21, "Sub-parent", ("Subitem 4.2", "Value 4.2")),
+            (21, 22, "Child", ("Subitem 4.2.1", "Value 4.2.1")),
+            (21, 23, "Child", ("Subitem 4.2.2", "Value 4.2.2")),
+            (21, 24, "Child", ("Subitem 4.2.3", "Value 4.2.3")),
+            (19, 25, "Child", ("Subitem 4.3", "Value 4.3")),
+        ]
+
+        # Insert treeview data
+        #for item in treeview_data:
+         #   self.treeview.insert("", "end", value=(item[1],item[2]))
+        self.treeview.insert("", "end", values=("Value 1", "Value 2"))  
+        self.treeview.insert("", "end", values=("Value 4", "Value 5")) 
+        self.treeview.pack(expand=True, fill="both") 
+
+"""        # Select and scroll

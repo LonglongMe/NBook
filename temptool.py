@@ -1,17 +1,5 @@
-[
-    {
-        "name": "Menu",
-        "booknumber": 1,
-        "bookname": [
-            "Voc1"
-        ]
-    },
-    {
-        "name": "Voc1",
-        "index": 0,
-        "lastwordindex": 35,
-        "pagedatalist": [
-            [
+pageline=22
+a=[[
                 [
                     0,
                     0,
@@ -104,7 +92,7 @@
                 ],
                 [
                     15,
-                    0,
+                    1,
                     1,
                     1
                 ]
@@ -220,13 +208,37 @@
                 ],
                 [
                     34,
-                    0,
+                    1,
                     1,
                     1
                 ]
-            ],
-            []
-        ],
-        "currentpage": 1
-    }
-]
+            ]]
+sum=0
+pageindex=0
+newlist=[[]]
+for pages in a:
+    for words in pages:
+        tepstart=0
+        if sum+words[3]>=pageline:
+            if sum+words[3]==pageline:
+                newlist[pageindex].append([words[0],0,words[3],words[3]])
+                newlist.append([])
+                pageindex+=1
+                sum=0
+            else:
+                newlist[pageindex].append([words[0],0,pageline-sum,words[3]])
+                newlist.append([])
+                pageindex+=1
+                tepstart=pageline-sum
+                while words[3]-tepstart>=pageline:
+                    newlist[pageindex].append([words[0],tepstart,tepstart+pageline,words[3]])
+                    tepstart+=pageline
+                    newlist.append([])
+                    pageindex+=1
+                sum=words[3]-tepstart
+                if sum!=0:
+                    newlist[pageindex].append([words[0],tepstart,words[3],words[3]])
+        else:
+            sum+=words[3]
+            newlist[pageindex].append([words[0],0,words[3]-1,words[3]])
+print(newlist)
